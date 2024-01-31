@@ -26,7 +26,18 @@ impl State {
     }
 
     fn main_menu(&mut self, ctx: &mut BTerm) {
-        todo!();
+        ctx.cls();
+        ctx.print_centered(5, "Game Project");
+        ctx.print_centered(7, "Press (P) to start playing !");
+        ctx.print_centered(8, "Press (Q) to quit the game");
+
+        if let Some(key) = ctx.key {
+            match key {
+                VirtualKeyCode::P => self.restart(ctx),
+                VirtualKeyCode::Q => self.quit(ctx),
+                _ => {}
+            }
+        }
     }
 
     fn play(&mut self, ctx: &mut BTerm) {
@@ -40,6 +51,10 @@ impl State {
     fn quit(&mut self, ctx: &mut BTerm) {
         todo!();
     }
+
+    fn restart(&mut self, ctx: &mut BTerm) {
+        todo!();
+    }
 }
 
 impl GameState for State {
@@ -50,6 +65,14 @@ impl GameState for State {
             Gamemode::Pause => self.pause(ctx),
             Gamemode::Quit => self.quit(ctx),
         }
+    }
+}
+
+struct Player {}
+
+impl Player {
+    fn new() {
+        todo!()
     }
 }
 
