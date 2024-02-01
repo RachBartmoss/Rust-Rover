@@ -5,6 +5,7 @@ mod character;
 
 const SCREEN_WIDTH: i32 = 80;
 const SCREEN_HEIGHT: i32 = 50;
+const FRAME_DURATION: f32 = 60.0;
 
 enum Gamemode {
     Menu,
@@ -16,13 +17,15 @@ enum Gamemode {
 struct State {
     mode: Gamemode,
     character: character::Character,
+    frame_time: f32,
 }
 
 impl State {
     fn new() -> Self {
         State {
             mode: Gamemode::Menu,
-            character: character::Character::new((SCREEN_WIDTH / 2) as f32, SCREEN_HEIGHT as f32),
+            character: character::Character::new((SCREEN_WIDTH / 2) as f32, 25.0),
+            frame_time: 0.0,
         }
     }
 
@@ -43,15 +46,29 @@ impl State {
 
     fn play(&mut self, ctx: &mut BTerm) {
         ctx.cls();
+        self.frame_time += ctx.frame_time_ms;
+
+        if self.frame_time > FRAME_DURATION {
+            self.character.apply_gravity_and_drag();
+            self.frame_time = 0.0;
+        }
+
         self.character.render(ctx);
 
         if let Some(key) = ctx.key {
             match key {
-                VirtualKeyCode::Left => self.character.coordinate.x -= 0.4,
-                VirtualKeyCode::Right => self.character.coordinate.x += 0.4,
+                VirtualKeyCode::Numpad7 => {
+                    self.character.thrust(character::Direction::Up);
+                    self.character.thrust(character::Direction::Left);
+                }
+                VirtualKeyCode::Numpad8 => self.character.thrust(character::Direction::Up),
+                VirtualKeyCode::Numpad4 => self.character.thrust(character::Direction::Left),
+                VirtualKeyCode::Numpad6 => self.character.thrust(character::Direction::Right),
+
                 _ => {}
             }
         }
+        self.character.apply_momentum();
     }
 
     fn pause(&mut self, ctx: &mut BTerm) {
@@ -63,7 +80,7 @@ impl State {
     }
 
     fn restart(&mut self, ctx: &mut BTerm) {
-        self.character = character::Character::new((SCREEN_WIDTH / 2) as f32, SCREEN_HEIGHT as f32);
+        self.character = character::Character::new((SCREEN_WIDTH / 2) as f32, 0.0 as f32);
         self.mode = Gamemode::Play;
     }
 }
