@@ -1,8 +1,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 
-use std::alloc::GlobalAlloc;
-
 use bracket_lib::prelude::*;
+mod character;
 
 const SCREEN_WIDTH: i32 = 80;
 const SCREEN_HEIGHT: i32 = 50;
@@ -16,12 +15,14 @@ enum Gamemode {
 
 struct State {
     mode: Gamemode,
+    character: character::Character,
 }
 
 impl State {
     fn new() -> Self {
         State {
             mode: Gamemode::Menu,
+            character: character::Character::new((SCREEN_WIDTH / 2) as f32, SCREEN_HEIGHT as f32),
         }
     }
 
@@ -41,7 +42,16 @@ impl State {
     }
 
     fn play(&mut self, ctx: &mut BTerm) {
-        todo!();
+        ctx.cls();
+        self.character.render(ctx);
+
+        if let Some(key) = ctx.key {
+            match key {
+                VirtualKeyCode::Left => self.character.coordinate.x -= 0.4,
+                VirtualKeyCode::Right => self.character.coordinate.x += 0.4,
+                _ => {}
+            }
+        }
     }
 
     fn pause(&mut self, ctx: &mut BTerm) {
@@ -53,7 +63,8 @@ impl State {
     }
 
     fn restart(&mut self, ctx: &mut BTerm) {
-        todo!();
+        self.character = character::Character::new((SCREEN_WIDTH / 2) as f32, SCREEN_HEIGHT as f32);
+        self.mode = Gamemode::Play;
     }
 }
 
@@ -68,17 +79,12 @@ impl GameState for State {
     }
 }
 
-struct Player {}
-
-impl Player {
-    fn new() {
-        todo!()
-    }
-}
-
 fn main() -> BError {
     let context = BTermBuilder::simple80x50()
-        .with_title("Practice Game")
+        .with_fancy_console(80, 50, "terminal8x8.png")
+        .with_title("Game Project")
+        .with_vsync(false)
+        .with_fps_cap(30.0)
         .build()?;
 
     main_loop(context, State::new())
