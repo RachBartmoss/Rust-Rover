@@ -11,9 +11,9 @@ pub enum Direction {
 }
 
 #[derive(PartialEq, PartialOrd)]
-struct Momentum {
-    vertical: f32,
-    horizontal: f32,
+pub struct Momentum {
+    pub vertical: f32,
+    pub horizontal: f32,
 }
 
 impl Momentum {
@@ -88,15 +88,18 @@ impl Character {
     pub fn apply_gravity_and_drag(&mut self, gravity: f32) {
         match self.momentum.vertical.partial_cmp(&gravity) {
             Some(Ordering::Greater) => self.momentum.vertical = gravity,
-            Some(Ordering::Less) => self.momentum.vertical += 0.2,
+            Some(Ordering::Less) => self.momentum.vertical += 0.02,
             Some(Ordering::Equal) => {}
             _ => {}
         }
         match self.momentum.horizontal.partial_cmp(&0.0) {
-            Some(Ordering::Greater) => self.momentum.horizontal -= 0.2,
-            Some(Ordering::Less) => self.momentum.horizontal += 0.2,
+            Some(Ordering::Greater) => self.momentum.horizontal -= 0.1,
+            Some(Ordering::Less) => self.momentum.horizontal += 0.1,
             Some(Ordering::Equal) => {}
             _ => {}
+        }
+        if self.momentum.horizontal > -0.1 && self.momentum.horizontal < 0.1 {
+            self.momentum.horizontal = 0.0;
         }
     }
 }

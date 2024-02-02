@@ -1,11 +1,13 @@
 #![warn(clippy::all, clippy::pedantic)]
 
+use std::fmt::format;
+
 use bracket_lib::prelude::*;
 mod character;
 
 const SCREEN_WIDTH: i32 = 80;
 const SCREEN_HEIGHT: i32 = 50;
-const FRAME_DURATION: f32 = 60.0;
+const FRAME_DURATION: f32 = 10.0;
 
 enum Gamemode {
     Menu,
@@ -46,28 +48,54 @@ impl State {
 
     fn play(&mut self, ctx: &mut BTerm) {
         ctx.cls();
+
+        ctx.print(0, 1, format!("X = {} ", self.character.coordinate.x));
+        ctx.print(0, 2, format!("Y = {} ", self.character.coordinate.y));
+        ctx.print(
+            0,
+            3,
+            format!("Vertical = {} ", self.character.momentum.vertical),
+        );
+        ctx.print(
+            0,
+            4,
+            format!("Horizontal = {} ", self.character.momentum.horizontal),
+        );
+
         self.frame_time += ctx.frame_time_ms;
 
         if self.frame_time > FRAME_DURATION {
             self.character.apply_momentum();
-            self.character.apply_gravity_and_drag(1.0);
+            self.character.apply_gravity_and_drag(0.6);
             self.frame_time = 0.0;
+        }
+
+        if self.character.coordinate.x > SCREEN_WIDTH as f32 {
+            self.character.coordinate.x = SCREEN_WIDTH as f32;
+        }
+        if self.character.coordinate.x < 0.0 {
+            self.character.coordinate.x = 1.0;
+        }
+        if self.character.coordinate.y > SCREEN_HEIGHT as f32 {
+            self.character.coordinate.y = SCREEN_HEIGHT as f32;
+        }
+        if self.character.coordinate.y < 0.0 {
+            self.character.coordinate.y = 1.0;
         }
 
         self.character.render(ctx);
 
         if let Some(key) = ctx.key {
-            match key {
-                VirtualKeyCode::Up => self.character.thrust(character::Direction::Up, 0.5, 3.0),
-                VirtualKeyCode::Left => self.character.thrust(character::Direction::Left, 0.4, 3.0),
-                VirtualKeyCode::Right => {
-                    self.character.thrust(character::Direction::Right, 0.4, 3.0)
-                }
-                _ => {}
+            if key == VirtualKeycode::Up {
+                self.character.thrust(character::Direction::Up, 0.4, 1.0);
+            }
+            if key == VirtualKeycode::Left {
+                self.character.thrust(character::Direction::Left, 0.4, 1.0);
+            }
+            if key == VirtualKeycode::Right {
+                self.character.thrust(character::Direction::Right, 0.4, 1.0);
             }
         }
-
-
     }
 
     fn pause(&mut self, ctx: &mut BTerm) {
