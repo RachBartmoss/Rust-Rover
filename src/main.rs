@@ -1,107 +1,76 @@
-#![warn(clippy::all, clippy::pedantic)]
+extern crate glutin_window;
+extern crate graphics;
+extern crate opengl_graphics;
+extern crate piston;
 
-use bracket_lib::prelude::*;
-mod character;
+use glutin_window::GlutinWindow as Window;
+use opengl_graphics::{GlGraphics, OpenGL};
+use piston::event_loop::{EventSettings, Events};
+use piston::input::{RenderArgs, RenderEvent, UpdateArgs, UpdateEvent};
+use piston::window::WindowSettings;
 
-const SCREEN_WIDTH: i32 = 80;
-const SCREEN_HEIGHT: i32 = 50;
-const FRAME_DURATION: f32 = 60.0;
-
-enum Gamemode {
-    Menu,
-    Play,
-    Pause,
-    Quit,
+pub struct App {
+    gl: GlGraphics, // OpenGL drawing backend.
+    rotation: f64,  // Rotation for the square.
 }
 
-struct State {
-    mode: Gamemode,
-    character: character::Character,
-    frame_time: f32,
-}
+impl App {
+    fn render(&mut self, args: &RenderArgs) {
+        use graphics::*;
 
-impl State {
-    fn new() -> Self {
-        State {
-            mode: Gamemode::Menu,
-            character: character::Character::new((SCREEN_WIDTH / 2) as f32, 25.0),
-            frame_time: 0.0,
-        }
+        const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
+        const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+
+        let square = rectangle::square(0.0, 0.0, 50.0);
+        let rotation = self.rotation;
+        let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
+
+        self.gl.draw(args.viewport(), |c, gl| {
+            // Clear the screen.
+            clear(GREEN, gl);
+
+            let transform = c
+                .transform
+                .trans(x, y)
+                .rot_rad(rotation)
+                .trans(-25.0, -25.0);
+
+            // Draw a box rotating around the middle of the screen.
+            rectangle(RED, square, transform, gl);
+        });
     }
 
-    fn main_menu(&mut self, ctx: &mut BTerm) {
-        ctx.cls();
-        ctx.print_centered(5, "Game Project");
-        ctx.print_centered(7, "Press (P) to start playing !");
-        ctx.print_centered(8, "Press (Q) to quit the game");
-
-        if let Some(key) = ctx.key {
-            match key {
-                VirtualKeyCode::P => self.restart(ctx),
-                VirtualKeyCode::Q => self.quit(ctx),
-                _ => {}
-            }
-        }
-    }
-
-    fn play(&mut self, ctx: &mut BTerm) {
-        ctx.cls();
-        self.frame_time += ctx.frame_time_ms;
-
-        if self.frame_time > FRAME_DURATION {
-            self.character.apply_momentum();
-            self.character.apply_gravity_and_drag(1.0);
-            self.frame_time = 0.0;
-        }
-
-        self.character.render(ctx);
-
-        if let Some(key) = ctx.key {
-            match key {
-                VirtualKeyCode::Up => self.character.thrust(character::Direction::Up, 0.5, 3.0),
-                VirtualKeyCode::Left => self.character.thrust(character::Direction::Left, 0.4, 3.0),
-                VirtualKeyCode::Right => {
-                    self.character.thrust(character::Direction::Right, 0.4, 3.0)
-                }
-                _ => {}
-            }
-        }
-
-
-    }
-
-    fn pause(&mut self, ctx: &mut BTerm) {
-        todo!();
-    }
-
-    fn quit(&mut self, ctx: &mut BTerm) {
-        todo!();
-    }
-
-    fn restart(&mut self, ctx: &mut BTerm) {
-        self.character = character::Character::new((SCREEN_WIDTH / 2) as f32, 0.0 as f32);
-        self.mode = Gamemode::Play;
+    fn update(&mut self, args: &UpdateArgs) {
+        // Rotate 2 radians per second.
+        self.rotation += 2.0 * args.dt;
     }
 }
 
-impl GameState for State {
-    fn tick(&mut self, ctx: &mut BTerm) {
-        match self.mode {
-            Gamemode::Menu => self.main_menu(ctx),
-            Gamemode::Play => self.play(ctx),
-            Gamemode::Pause => self.pause(ctx),
-            Gamemode::Quit => self.quit(ctx),
+fn main() {
+    // Change this to OpenGL::V2_1 if not working.
+    let opengl = OpenGL::V3_2;
+
+    // Create a Glutin window.
+    let mut window: Window = WindowSettings::new("spinning-square", [200, 200])
+        .graphics_api(opengl)
+        .exit_on_esc(true)
+        .build()
+        .unwrap();
+
+    // Create a new game and run it.
+    let mut app = App {
+        gl: GlGraphics::new(opengl),
+        rotation: 0.0,
+    };
+
+    let mut events = Events::new(EventSettings::new());
+    while let Some(e) = events.next(&mut window) {
+        if let Some(args) = e.render_args() {
+            app.render(&args);
+        }
+
+        if let Some(args) = e.update_args() {
+            app.update(&args);
         }
     }
-}
-
-fn main() -> BError {
-    let context = BTermBuilder::simple80x50()
-        .with_fancy_console(80, 50, "terminal8x8.png")
-        .with_title("Game Project")
-        .with_vsync(false)
-        .with_fps_cap(60.0)
-        .build()?;
-
-    main_loop(context, State::new())
 }
