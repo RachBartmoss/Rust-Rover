@@ -49,7 +49,8 @@ impl State {
         self.frame_time += ctx.frame_time_ms;
 
         if self.frame_time > FRAME_DURATION {
-            self.character.apply_gravity_and_drag();
+            self.character.apply_momentum();
+            self.character.apply_gravity_and_drag(1.0);
             self.frame_time = 0.0;
         }
 
@@ -57,18 +58,14 @@ impl State {
 
         if let Some(key) = ctx.key {
             match key {
-                VirtualKeyCode::Numpad7 => {
-                    self.character.thrust(character::Direction::Up);
-                    self.character.thrust(character::Direction::Left);
+                VirtualKeyCode::Up => self.character.thrust(character::Direction::Up, 0.5, 3.0),
+                VirtualKeyCode::Left => self.character.thrust(character::Direction::Left, 0.4, 3.0),
+                VirtualKeyCode::Right => {
+                    self.character.thrust(character::Direction::Right, 0.4, 3.0)
                 }
-                VirtualKeyCode::Numpad8 => self.character.thrust(character::Direction::Up),
-                VirtualKeyCode::Numpad4 => self.character.thrust(character::Direction::Left),
-                VirtualKeyCode::Numpad6 => self.character.thrust(character::Direction::Right),
-
                 _ => {}
             }
         }
-        self.character.apply_momentum();
     }
 
     fn pause(&mut self, ctx: &mut BTerm) {
@@ -101,7 +98,7 @@ fn main() -> BError {
         .with_fancy_console(80, 50, "terminal8x8.png")
         .with_title("Game Project")
         .with_vsync(false)
-        .with_fps_cap(30.0)
+        .with_fps_cap(60.0)
         .build()?;
 
     main_loop(context, State::new())

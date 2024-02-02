@@ -1,5 +1,7 @@
 #![warn(clippy::all, clippy::pedantic)]
 
+use std::cmp::Ordering;
+
 use bracket_lib::prelude::*;
 
 pub enum Direction {
@@ -8,20 +10,17 @@ pub enum Direction {
     Right,
 }
 
+#[derive(PartialEq, PartialOrd)]
 struct Momentum {
-    upward: f32,
-    downward: f32,
-    leftward: f32,
-    rightward: f32,
+    vertical: f32,
+    horizontal: f32,
 }
 
 impl Momentum {
     fn new() -> Self {
         Momentum {
-            upward: 0.0,
-            downward: 0.5,
-            leftward: 0.0,
-            rightward: 0.0,
+            vertical: -1.0,
+            horizontal: 0.0,
         }
     }
 }
@@ -38,7 +37,7 @@ impl Character {
         Character {
             coordinate: PointF::new(x, y),
             orientation: Degrees::new(0.0),
-            scaling: PointF::new(2.0, 2.0),
+            scaling: PointF::new(1.0, 1.0),
             momentum: Momentum::new(),
         }
     }
@@ -59,38 +58,45 @@ impl Character {
         ctx.set_active_console(0);
     }
 
-    pub fn thrust(&mut self, direction: Direction) {
+    pub fn thrust(&mut self, direction: Direction, acceleration: f32, max_acceleration: f32) {
+        let negative_max_acceleration: f32 = max_acceleration * -1.0;
+
         match direction {
             Direction::Up => {
-                if self.momentum.upward < 2.0 {
-                    self.momentum.upward += 0.3
-                } else {
-                    self.momentum.upward = 2.0
+                if self.momentum.vertical > negative_max_acceleration {
+                    self.momentum.vertical -= acceleration
                 }
             }
-
-            Direction::Left => self.momentum.leftward += 0.3,
-            Direction::Right => self.momentum.rightward += 0.3,
+            Direction::Left => {
+                if self.momentum.horizontal > negative_max_acceleration {
+                    self.momentum.horizontal -= acceleration
+                }
+            }
+            Direction::Right => {
+                if self.momentum.horizontal < max_acceleration {
+                    self.momentum.horizontal += acceleration
+                }
+            }
         }
     }
 
     pub fn apply_momentum(&mut self) {
-        self.coordinate.x += self.momentum.rightward;
-        self.coordinate.x -= self.momentum.leftward;
-
-        self.coordinate.y -= self.momentum.upward;
+        self.coordinate.x += self.momentum.horizontal;
+        self.coordinate.y += self.momentum.vertical;
     }
 
-    pub fn apply_gravity_and_drag(&mut self) {
-        self.coordinate.y += self.momentum.downward;
-        if self.momentum.upward > 0.0 {
-            self.momentum.upward -= 0.1;
+    pub fn apply_gravity_and_drag(&mut self, gravity: f32) {
+        match self.momentum.vertical.partial_cmp(&gravity) {
+            Some(Ordering::Greater) => self.momentum.vertical = gravity,
+            Some(Ordering::Less) => self.momentum.vertical += 0.2,
+            Some(Ordering::Equal) => {}
+            _ => {}
         }
-        if self.momentum.leftward > 0.0 {
-            self.momentum.leftward -= 0.1;
-        }
-        if self.momentum.rightward > 0.0 {
-            self.momentum.rightward -= 0.1;
+        match self.momentum.horizontal.partial_cmp(&0.0) {
+            Some(Ordering::Greater) => self.momentum.horizontal -= 0.2,
+            Some(Ordering::Less) => self.momentum.horizontal += 0.2,
+            Some(Ordering::Equal) => {}
+            _ => {}
         }
     }
 }
