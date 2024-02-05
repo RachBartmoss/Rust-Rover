@@ -85,16 +85,16 @@ impl Character {
         self.coordinate.y += self.momentum.vertical;
     }
 
-    pub fn apply_gravity_and_drag(&mut self, gravity: f32) {
+    pub fn apply_gravity_and_drag(&mut self, gravity: f32, drag: f32) {
         match self.momentum.vertical.partial_cmp(&gravity) {
             Some(Ordering::Greater) => self.momentum.vertical = gravity,
-            Some(Ordering::Less) => self.momentum.vertical += 0.02,
+            Some(Ordering::Less) => self.momentum.vertical += gravity,
             Some(Ordering::Equal) => {}
             _ => {}
         }
         match self.momentum.horizontal.partial_cmp(&0.0) {
-            Some(Ordering::Greater) => self.momentum.horizontal -= 0.1,
-            Some(Ordering::Less) => self.momentum.horizontal += 0.1,
+            Some(Ordering::Greater) => self.momentum.horizontal -= drag,
+            Some(Ordering::Less) => self.momentum.horizontal += drag,
             Some(Ordering::Equal) => {}
             _ => {}
         }
