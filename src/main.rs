@@ -1,6 +1,5 @@
 #![warn(clippy::all, clippy::pedantic)]
 use bracket_lib::prelude::*;
-use std::{collections::HashMap, vec};
 mod character;
 
 const SCREEN_WIDTH: i32 = 80;
@@ -47,7 +46,6 @@ impl State {
     }
 
     fn play(&mut self, ctx: &mut BTerm) {
-        
         ctx.cls();
 
         ctx.print(0, 1, format!("X = {} ", self.character.coordinate.x));
@@ -67,9 +65,8 @@ impl State {
         self.frame_time += ctx.frame_time_ms;
 
         if self.frame_time > FRAME_DURATION {
-            self.character.apply_momentum();
-            self.character.apply_gravity_and_drag(0.4, 0.2);
-            //self.pressed_key.pop();
+            self.character.apply_gravity_and_drag(0.2, 0.3);
+            self.pressed_key.pop();
             self.frame_time = 0.0;
         }
 
@@ -88,26 +85,21 @@ impl State {
 
         self.character.render(ctx);
 
-        if let Some(key) = ctx.key {
-            self.pressed_key.push(key)
-        } else {
-            self.pressed_key.pop();
+    
+
+        let input = INPUT.lock();
+
+        if input.is_key_pressed(VirtualKeyCode::Up) {
+            self.character.thrust(character::Direction::Up, 0.4, 0.5);
+        }
+        if input.is_key_pressed(VirtualKeyCode::Left) {
+            self.character.thrust(character::Direction::Left, 0.4, 0.5);
+        }
+        if input.is_key_pressed(VirtualKeyCode::Right) {
+            self.character.thrust(character::Direction::Right, 0.4, 0.5);
         }
 
-        for key in &self.pressed_key {
-            match key {
-                VirtualKeyCode::Up => {
-                    self.character.thrust(character::Direction::Up, 0.5, 1.5);
-                }
-                VirtualKeyCode::Left => {
-                    self.character.thrust(character::Direction::Left, 0.5, 1.5);
-                }
-                VirtualKeyCode::Right => {
-                    self.character.thrust(character::Direction::Right, 0.5, 1.5);
-                }
-                _ => {}
-            }
-        }
+        self.character.apply_momentum();
     }
 
     fn pause(&mut self, ctx: &mut BTerm) {
