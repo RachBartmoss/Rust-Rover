@@ -1,4 +1,6 @@
 #![warn(clippy::all, clippy::pedantic)]
+use std::sync::MutexGuard;
+
 use bracket_lib::prelude::*;
 mod character;
 
@@ -17,7 +19,7 @@ struct State {
     mode: Gamemode,
     character: character::Character,
     frame_time: f32,
-    pressed_key: Vec<VirtualKeyCode>,
+    
 }
 
 impl State {
@@ -26,7 +28,7 @@ impl State {
             mode: Gamemode::Menu,
             character: character::Character::new((SCREEN_WIDTH / 2) as f32, 25.0),
             frame_time: 0.0,
-            pressed_key: Vec::new(),
+            
         }
     }
 
@@ -47,6 +49,7 @@ impl State {
 
     fn play(&mut self, ctx: &mut BTerm) {
         ctx.cls();
+        let input = INPUT.lock();
 
         ctx.print(0, 1, format!("X = {} ", self.character.coordinate.x));
         ctx.print(0, 2, format!("Y = {} ", self.character.coordinate.y));
@@ -60,13 +63,12 @@ impl State {
             4,
             format!("Horizontal = {} ", self.character.momentum.horizontal),
         );
-        ctx.print(0, 5, format!("pressed key : {:?} ", self.pressed_key));
 
         self.frame_time += ctx.frame_time_ms;
 
         if self.frame_time > FRAME_DURATION {
             self.character.apply_gravity_and_drag(0.2, 0.3);
-            self.pressed_key.pop();
+
             self.frame_time = 0.0;
         }
 
@@ -84,10 +86,6 @@ impl State {
         }
 
         self.character.render(ctx);
-
-    
-
-        let input = INPUT.lock();
 
         if input.is_key_pressed(VirtualKeyCode::Up) {
             self.character.thrust(character::Direction::Up, 0.4, 0.5);
