@@ -15,4 +15,6 @@ This is a simple game where the player controls a rover on a grid. The rover can
 2. Follow the on-screen instructions to play the game.
 
 
-https://github.com/RachBartmoss/Rust-Rover/blob/master/Resources/icon.jpg
+## Building documentation 
+1. Build documentation using `cargo doc`
+2. Open the resulting index.html file with your browser of choice
