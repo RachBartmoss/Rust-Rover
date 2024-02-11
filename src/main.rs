@@ -1,6 +1,12 @@
 use bracket_lib::prelude::*;
+
+/// The character module handles everything related to the game's character, such as the character's ship position and momentum
 mod character;
+
+/// The hazards module handles everything related to the game's hazards, such as the asteroids
 mod hazards;
+
+/// The map module handles everything related to the game's map, such as the landing pad
 mod map;
 
 /// The width of the window used in the game, the project uses bracket-lib's

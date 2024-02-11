@@ -653,7 +653,7 @@ checksum = "3a471a38ef8ed83cd6e40aa59c1ffe17db6855c18e3604d9c4ed8c08ebc28678"
 
 [[package]]
 name = "game_project"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bracket-lib",
 ]

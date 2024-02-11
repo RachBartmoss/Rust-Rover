@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-
 use bracket_lib::prelude::*;
 
 /// The Direction enum is used to represent the possible directions the character can move in.
