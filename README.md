@@ -1,5 +1,5 @@
 # Rust Rover
-!["A cute lobster in a mars rover](https://github.com/RachBartmoss/Rust-Rover/Resources/icon.jpg)
+!["A cute lobster in a mars rover](https://github.com/RachBartmoss/Rust-Rover/blob/master/Resources/icon.jpg)
 
 
 ## Description
@@ -15,3 +15,4 @@ This is a simple game where the player controls a rover on a grid. The rover can
 2. Follow the on-screen instructions to play the game.
 
 
+https://github.com/RachBartmoss/Rust-Rover/blob/master/Resources/icon.jpg
